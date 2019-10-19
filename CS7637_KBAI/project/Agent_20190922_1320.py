@@ -11,7 +11,6 @@
 # Install Pillow and uncomment this line to access image processing.
 from PIL import Image
 import numpy as np
-#from scipy.spatial.distance import cdist
 
 # Notes:
 # - All images may have 255 for the alpha value, i.e., images are RGB
@@ -36,13 +35,8 @@ class Agent:
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
     def Solve(self, problem):
-        
-        # This loop writes the image data for each image to .txt files
-#        for f in problem.figures:
-#            image = Image.open(problem.figures[f].visualFilename)
-#            image = image.convert('L')
-#            filename = problem.figures[f].name + '.txt'
-#            self.writeData(image, filename)
+        #print(problem.name, problem.problemType, problem.problemSetName, \
+              #problem.hasVisual, problem.hasVerbal)
         
         # The index is used to look-up the structure for a problemType.
         # For the values, the first tuple contains the 'question' images and 
@@ -71,24 +65,23 @@ class Agent:
             #xform = (1, 0, 0, 0, 1, 0)
             #imageAx = self.applyXformAffine(imageA, xform)
             #imageAx.show()
+            
+            #pdiffAB = self.pixelDifference(imageA, imageB)
+            #print('Pixel difference between A and B =', str(pdiffAB))
+            #pdiffAC = self.pixelDifference(imageA, imageC)
+            #print('Pixel difference between A and C =', str(pdiffAC))
+            
+            #hdiffAB = self.histDifference(imageA, imageB)
+            #print('Histogram difference between A and B =', str(hdiffAB))
+            #hdiffAC = self.histDifference(imageA, imageC)
+            #print('Histogram difference between A and C =', str(hdiffAC))
                         
             # Test all the 'basic' transformations and return the transformations
-            # that map A-B and A-C within the specified tolerance.
-            #
-            # For Problem 6, within self.compareXformsBasic(imageA, imageC):
-            # [0.0027637734, 0.022322945, 0.0279591782, 0.0281285537, 0.0481293936, 0.0656495987]
-            # ['FLIP_TOP_BOTTOM', 'ROTATE_90', 'ROTATE_270', 'FLIP_LEFT_RIGHT', 'ROTATE_180', 'TRANSPOSE']
-            # For Problem 11, within self.compareXformsBasic(imageA, imageB):
-            # [0.0254438144, 0.0971996978, 0.0975686778, 0.0975686778, 0.1165908785, 0.1165982627]
-            # ['FLIP_LEFT_RIGHT', 'TRANSPOSE', 'ROTATE_90', 'ROTATE_270', 'FLIP_TOP_BOTTOM', 'ROTATE_180']
-            # Therefore, the tolerance would have to be set > 0.0279591782 
-            # to return the correct answer for Problem 6, 'ROTATE_270', but 
-            # would have to be set < 0.0254438144 to eliminate the 
-            # incorrect answer for Problem 11, 'FLIP_LEFT_RIGHT'.
-            xformsBasicAB, xformsBasicABnames = self.compareXformsBasic(imageA, imageB, 0.03, 0.022)
+            # that successfully map A-B and A-C.
+            xformsBasicAB = self.compareXformsBasic(imageA, imageB)
             #print('Indicative transformation(s) for A-B is/are:', xformsBasicAB)
-            xformsBasicAC, xformsBasicACnames = self.compareXformsBasic(imageA, imageC, 0.03, 0.022)
-            #print('Indicative transformation(s) for A-C is/are:', xformsBasicACnames)
+            xformsBasicAC = self.compareXformsBasic(imageA, imageC)
+            #print('Indicative transformation(s) for A-C is/are:', xformsBasicAC)
             
             # If they exists, apply the indicative transformations on C and B.
             # Then check if the resulting image is one of the answers.
@@ -98,8 +91,8 @@ class Agent:
                 count = 0
                 answerFromAB = False
                 while count < len(xformsBasicAB) and (not answerFromAB):
-                    imageDfromAB = self.applyXformBasic(imageC, xformsBasicABnames[count])
-                    answerFromAB = self.findAnswer(problem, imageDfromAB, answers, 0.03)
+                    imageDfromAB = self.applyXformBasic(imageC, xformsBasicAB[count])
+                    answerFromAB = self.findAnswerBasic(problem, imageDfromAB, answers)
                     #print('Answer from A-B transformation:', answerFromAB)
                     count += 1
             #else:
@@ -109,13 +102,15 @@ class Agent:
                 count = 0
                 answerFromAC = False
                 while count < len(xformsBasicAC) and not answerFromAC:
-                    imageDfromAC = self.applyXformBasic(imageB, xformsBasicACnames[count])
-                    answerFromAC = self.findAnswer(problem, imageDfromAC, answers, 0.03)
+                    imageDfromAC = self.applyXformBasic(imageB, xformsBasicAC[count])
+                    answerFromAC = self.findAnswerBasic(problem, imageDfromAC, answers)
                     #print('Answer from A-C transformation:', answerFromAC)
                     count += 1
             #else:
                 #print('No basic indicative transformation found for A-C.')
             
+            # If the transformations applied to C and B both result in 
+            # the same answer, return that image as the answer.
             # Both transformations were identified
             #
             # solvedByBasic tracks whether or not the basic methods have solved
@@ -143,8 +138,8 @@ class Agent:
                     solvedByBasic = True
                     return int(answerFromAB)
                 # Neither transformation resulted in an available answer
-                #else:
-                    #print('No matching answer image found. No final answer from the basic solver.')
+                else:
+                    print('No matching answer image found. No final answer from the basic solver.')
                     #return -1
             # Only the A-B transformation was identified
             elif xformsBasicAB:
@@ -152,8 +147,8 @@ class Agent:
                     #print('Only A-B transformation exists and it produces an answer.')
                     solvedByBasic = True
                     return int(answerFromAB)
-                #else:
-                    #print('No valid transformation. No final answer from the basic solver.')
+                else:
+                    print('No valid transformation. No final answer from the basic solver.')
                     #return -1
             # Only the A-C transformation was identified
             elif xformsBasicAC:
@@ -161,11 +156,11 @@ class Agent:
                     #print('Only A-C transformation exists and it produces an answer.')
                     solvedByBasic = True
                     return int(answerFromAC)
-                #else:
-                    #print('No valid transformation. No final answer from the basic solver.')
+                else:
+                    print('No valid transformation. No final answer from the basic solver.')
                     #return -1
-            #else:
-                #print('No valid transformation. No final answer from the basic solver.')
+            else:
+                print('No valid transformation. No final answer from the basic solver.')
                 #return -1
         
             # If the previous basic transformation solve methods did not work,
@@ -174,47 +169,37 @@ class Agent:
             # solvedByPixel tracks whether or not the pixel method solved it.
             solvedByPixel = False
             if solvedByBasic == False:
-                print('Attempting to solve by pixel difference..')
                 xformPixelAB = self.generateXformPixel(imageA, imageB)
-                xformPixelAC = self.generateXformPixel(imageA, imageC)
                 
-                #with open('difference.txt', 'w') as imageData:
-                    #for x in xformPixelAB:
-                        #imageData.write(str(x) + '\n')
+                with open('difference.txt', 'w') as imageData:
+                    for x in xformPixelAB:
+                        imageData.write(str(x) + '\n')
                 
                 imageDfromABpixel = self.applyXformPixel(imageC, xformPixelAB)
-                #imageDfromABpixel.show()
-                imageDfromACpixel = self.applyXformPixel(imageB, xformPixelAC)
-                #imageDfromACpixel.show()
-                
-                answerFromABpixel = self.findAnswer(problem, imageDfromABpixel, answers, 0.05)
-                #print(answerFromABpixel)
-                answerFromACpixel = self.findAnswer(problem, imageDfromACpixel, answers, 0.05)
-                #print(answerFromACpixel)
-                
-                # If both answers equal each other and are valid
-                if answerFromABpixel and (answerFromABpixel == answerFromACpixel):
-                    solvedByPixel = True
-                    return int(answerFromABpixel)
-                #else:
-                    #print('Pixel difference method did not find answer.')
+                imageDfromABpixel.show()
             
             if solvedByBasic == False and solvedByPixel == False:
-                #print('Neither method found an answer.')
+                print('Neither method found an answer.')
                 return -1
         
         # Anything not 2x2 not handled at this point
         else:
             return -1
-        
+            
+        #for f in problem.figures:
+            #image = Image.open(problem.figures[f].visualFilename)
+            #image = image.convert('L')
+            #filename = problem.figures[f].name + '.txt'
+            #self.writeData(image, filename)
         #return -1
 
+    # This function writes the data from getdata() to .txt files
     def writeData(self, image, filename):
-        '''Writes the data from np.array() for the specified image filename
-        to a .txt file.
+        '''Writes the data from getdata() for the specified image filename
+        to a .txt file
         '''
         with open(filename, 'w') as imageData:
-            data = np.array(image)
+            data = list(image.getdata())
             for d in data:
                 imageData.write(str(d) + '\n')
 
@@ -242,111 +227,118 @@ class Agent:
         Each image vector is a complete sequence of pixel data.
         '''
         
-        # Not converting the images to type='L' and computing the generalized 
-        # Euclidean distance, Minkowski distance, results in a computation time 
-        # for one distance calculation exceeding the total problem solve time 
-        # when using converted type='L' images.
-        #p1 = np.array(image1)
-        #print(p1.shape)
-        #p2 = np.array(image2)
-        #print(p2.shape)
-        #di = cdist(pixels1, pixels2, 'minkowski', 3)**2
-        #print(di.shape)
-        
         pixels1 = np.array(list(image1.getdata()))
         pixels2 = np.array(list(image2.getdata()))
         
         #print('Calculating pixel difference...')
-        diff = pixels1 - pixels2
+        diff = pixels1 - pixels2        
         euclid = np.array( [np.sqrt(d**2) for d in diff] ).sum()
-        euclidNorm = round( euclid/(len(diff)*256), 10 )
+        #print(euclid)
+        euclidNorm = round(euclid/(len(diff)*256),10)
         
         #print('Returning pixel difference...')
         return euclidNorm
     
-    def compareXformsBasic(self, image1, image2, tolerance1, tolerance2):
+    def diffLogicBasic(self, image1, image2):
+        
+        pdiff12 = self.pixelDifference(image1, image2)
+        #print('Pixel difference =', pdiff12)
+        hdiff12 = self.histDifference(image1, image2)
+        #print('Histogram difference =', hdiff12)
+        
+        # Basis for difference tolerance:
+        # Basic Problem B-04 2x2 Basic Problems B True True
+        # Pixel difference between A and B = 0.1894982379
+        # Pixel difference between A and C = 0.1892480976
+        # Histogram difference between A and B = 0.001159668
+        # Histogram difference between A and C = 0.0014648438
+        # Therefore, set difference tolerance to 0.01
+        #
+        # Reset tolerance to 0.03: basis is Basic Problem B-06 A-C transformation
+        #
+        # Logic flow for what histDifference and pixelDifference mean
+        if pdiff12 < 0.03:
+            # The two images are near-exact duplicates
+            relationship = 'exact'
+        else:
+            if hdiff12 < 0.01:
+                # The two images are not near-exact duplicates, but
+                # have the near-same shape. Therefore, the two images are 
+                # likely rotations or transpositions of one another
+                relationship = 'shape'
+            else:
+                relationship = 'neither'
+        
+        return relationship
+    
+    def compareXformsBasic(self, image1, image2):
         '''Applies all of the 'basic' transformations to image1 and 
         compares the results to image2. 
         
-        Returns all of the transformations that result in image2.
+        Return all of the transformations that result in image2.
         '''
         
-        # Paired lists, where the index of the name in xformNames will 
-        # correspond with the index of the value in xformValues
-        xformValues = list()
-        xformNames = list()
+        # Contains the diffLogic results for each of the transformations
+        # {'transformation': (transformation ID, diffLogic result)}
+        xforms = dict()
         
         # Flips image about the vertical central axis, "left to right";
         # transformation ID = 01 for FLIP_LEFT_RIGHT
         image1x01 = image1.transpose(method=Image.FLIP_LEFT_RIGHT)
-        diff1x01 = self.pixelDifference(image1x01, image2)
-        xformValues.append(diff1x01)
-        xformNames.append('FLIP_LEFT_RIGHT')
+        t1x01 = self.diffLogicBasic(image1x01, image2)
+        xforms.update({'FLIP_LEFT_RIGHT': (1, t1x01)})
         
         # Flips image about the horizontal axis
         # transformation ID = 02 for FLIP_TOP_BOTTOM
         image1x02 = image1.transpose(method=Image.FLIP_TOP_BOTTOM)
-        diff1x02 = self.pixelDifference(image1x02, image2)
-        xformValues.append(diff1x02)
-        xformNames.append('FLIP_TOP_BOTTOM')
+        t1x02 = self.diffLogicBasic(image1x02, image2)
+        xforms.update({'FLIP_TOP_BOTTOM': (2, t1x02)})
         
         # Rotates images counterclockwise 90 degrees
         # transformation ID = 03 for ROTATE_90
         image1x03 = image1.transpose(method=Image.ROTATE_90)
-        diff1x03 = self.pixelDifference(image1x03, image2)
-        xformValues.append(diff1x03)
-        xformNames.append('ROTATE_90')
+        t1x03 = self.diffLogicBasic(image1x03, image2)
+        xforms.update({'ROTATE_90': (3, t1x03)})
         
         # Rotates images counterclockwise 180 degrees
         # transformation ID = 04 for ROTATE_180
         image1x04 = image1.transpose(method=Image.ROTATE_180)
-        diff1x04 = self.pixelDifference(image1x04, image2)        
-        xformValues.append(diff1x04)
-        xformNames.append('ROTATE_180')
+        t1x04 = self.diffLogicBasic(image1x04, image2)
+        xforms.update({'ROTATE_180': (4, t1x04)})
         
         # Rotates images counterclockwise 270 degrees
         # transformation ID = 05 for ROTATE_270
         image1x05 = image1.transpose(method=Image.ROTATE_270)
-        diff1x05 = self.pixelDifference(image1x05, image2)
-        xformValues.append(diff1x05)
-        xformNames.append('ROTATE_270')
+        t1x05 = self.diffLogicBasic(image1x05, image2)
+        xforms.update({'ROTATE_270': (5, t1x05)})
         
         # Reflects image about the y = -x 'transpose' axis
         # transformation ID = 06 for TRANSVERSE
         image1x06 = image1.transpose(method=Image.TRANSPOSE)
-        diff1x06 = self.pixelDifference(image1x06, image2)
-        xformValues.append(diff1x06)
-        xformNames.append('TRANSPOSE')
+        t1x06 = self.diffLogicBasic(image1x06, image2)
+        xforms.update({'TRANSPOSE': (6, t1x06)})
         
-        # Zips xformValues and xformNames together in order to order the 
-        # results by difference; least to greatest
-        valuesNames = zip(xformValues, xformNames)
-        valuesNames = sorted(valuesNames, key=lambda x: x[0])
-        xformValues = [v for v, n in valuesNames]
-        xformNames = [n for v, n in valuesNames]
+        # method=Image.TRANSVERSE raises exception when run against 
+        # bonnie environment
+        #
+        # Reflects image about the y = x 'transverse' axis
+        # transformation ID = 07 for TRANSVERSE
+        #image1x07 = image1.transpose(method=Image.TRANSVERSE)
+        #t1x07 = self.diffLogicBasic(image1x07, image2)
+        #xforms.update({'TRANSVERSE': (7, t1x07)})
         
-        # If only one value in xformValues is below the tolerance, lower the 
-        # tolerance to the smaller threshold
-        # The default is the tolerance1 value.
-        tolerance = tolerance1
-        count = 0
-        for v in xformValues:
-            if v <= tolerance1:
-                count += 1
-        if count == 1:
-            tolerance = tolerance2
+        # Identify which transformations are valid and then rank according 
+        # to heirarchy. Returns the list of valid transformations order in 
+        # accordance with the heirarchy. The heirarchy is represented by 
+        # the order in which the transformations are checked above; e.g., 
+        # if FLIP_LEFT_RIGHT is valid, it will always be the first element
+        # in the list xformsMatch.
+        xformsMatch = list()                
+        for xf in xforms:
+            if xforms[xf][1] == 'exact':
+                xformsMatch.append(xf)
         
-        # Pulls only the values from xformValues and xformNames < tolerance
-        count = 0
-        finalValues = list()
-        finalNames = list()
-        for v in xformValues:
-            if v <= tolerance:
-                finalValues.append(v)
-                finalNames.append(xformNames[count])
-            count += 1
-        
-        return finalValues, finalNames
+        return xformsMatch
     
     def applyXformBasic(self, image, xform):
         '''Applies the specified basic transformation on the image and returns
@@ -372,54 +364,43 @@ class Agent:
         
         return result
     
-    def findAnswer(self, problem, image, answers, tolerance):
+    def findAnswerBasic(self, problem, image, answers):
         '''Compares the candidate answer to the images in the set of answers.
         '''
         answerFiles = {a:problem.figures[a].visualFilename for a in answers}
         
         # Check to ensure only one matching answer is returned
         count = 0
-        matches = list()
-        diffs = list()
+        answer = list()
         for af in answerFiles:
             imageAnswer = Image.open(answerFiles[af])
             imageAnswer = imageAnswer.convert('L')
-            diff = self.pixelDifference(image, imageAnswer)
-            if diff < tolerance:
+            rel = self.diffLogicBasic(image, imageAnswer)
+            if rel == 'exact':
                 count += 1
-                matches.append(af)
-                diffs.append(diff)
+                answer.append(af)
         
         # Only one answer found
-        if len(matches) == 1:
-            return matches[0]
+        if count == 1:
+            return answer[0]
         # No answers found
-        elif len(matches) == 0:
+        elif count == 0:
             return False
         else:
-            print('Multiple answers found. Consider reducing tolerance.')
-            
-            # Zips matches and diffs together in order to order the results 
-            # by difference; least to greatest
-            diffsMatches = zip(diffs, matches)
-            diffsMatches = sorted(diffsMatches, key=lambda x: x[0])
-            diffs = [d for d, m in diffsMatches]
-            matches = [m for d, m in diffsMatches]
-            
-            # Return the first answer in matches; i.e., the answer with the 
-            # lowest difference
-            return matches[0]
+            #print('Multiple answers found. Consider reducing tolerance.')
+            # Return the first answer found
+            return answer[0]
     
     def generateXformPixel(self, image1, image2):
         '''Generates an additive transformation that will transform image1 to 
         image 2 pixel-by-pixel.
         
         Returns an array equal in length to image1 and image2. Adding this 
-        array element-by-element to np.array(image1) results in np.array(image2).
+        array element-by-element to image1.getdata() results in image2.getdata().
         '''
-        pixels1 = np.array(image1)
-        pixels2 = np.array(image2)
-        xform = np.subtract(pixels2, pixels1)
+        pixels1 = np.array(list(image1.getdata()))
+        pixels2 = np.array(list(image2.getdata()))
+        xform = pixels2 - pixels1
         
         return xform
     
@@ -427,11 +408,12 @@ class Agent:
         '''Applies the specified transformation to the image and returns the 
         transformed image.
         
-        The parameter xform should be an array of equal length to np.array(image).
+        The parameter xform should be an array of equal length to image.getdata(). 
+        This method adds the values of 
         '''
-        pixels = np.array(image)
-        result = pixels + xform
-        result = Image.fromarray(result)
+        pixels = np.array(list(image.getdata()))
+        difference = pixels + xform
+        result = Image.frombytes(mode='L', image.size, difference)
         return result
 
     def applyXformAffine(self, image, xform):
