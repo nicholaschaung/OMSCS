@@ -46,12 +46,12 @@ def solve():
     #print(sets)
     #print()
     for s in sets:
-        if s.name == "Basic Problems B":
+        if s.name == "Basic Problems D":
             #print(s.name)
             #print(s.problems)
             #print()
             for p in s.problems:
-                if p.name == "Basic Problem B-11":
+                if p.name == "Basic Problem D-06":
                     print(p.name, p.problemType, p.problemSetName, p.hasVisual, p.hasVerbal)
                     print(p.figures)
                     print()
@@ -70,9 +70,9 @@ def solve():
 
     # Running agent against each problem set
     for set in sets:
-        if set.name == "Basic Problems B":
+        if set.name == "Basic Problems D":
             for problem in set.problems:   # Your agent will solve one problem at a time.
-                if problem.name == "Basic Problem B-11":
+                if problem.name == "Basic Problem D-06":
                     answer = agent.Solve(problem)
                     print('Final answer:', str(answer))
     
