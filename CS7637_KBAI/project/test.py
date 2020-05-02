@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 15 13:10:21 2019
-
-@author: nicholas
-"""
-
 # DO NOT MODIFY THIS FILE.
 #
 # Any modifications to this file will not be used when grading your project.
