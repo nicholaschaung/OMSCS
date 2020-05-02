@@ -84,6 +84,11 @@ class Agent:
         #xform = (1, 0, 0, 0, 1, 0)
         #imageAx = self.applyXformAffine(imageA, xform)
                     
+        # Begin cleanup
+        # add test line
+        print('Begin cleanup')
+        print('Additional Change')
+        
         # Test all the 'basic' transformations and return the transformations
         # that map A-B and A-C within the specified tolerance.
         #
