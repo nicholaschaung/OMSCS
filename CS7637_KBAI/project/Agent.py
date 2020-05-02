@@ -83,7 +83,7 @@ class Agent:
         
         #xform = (1, 0, 0, 0, 1, 0)
         #imageAx = self.applyXformAffine(imageA, xform)
-                    
+        
         # Begin cleanup
         # add test line
         print('Begin cleanup')
