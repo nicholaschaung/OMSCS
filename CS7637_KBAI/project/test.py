@@ -45,8 +45,7 @@ def solve():
             for p in s.problems:
                 if p.name == "Basic Problem D-06":
                     print(p.name, p.problemType, p.problemSetName, p.hasVisual, p.hasVerbal)
-                    print(p.figures)
-                    print()
+                    #print(p.figures)
                     for f in p.figures:
                         if f == "A":
                             print(f, p.figures[f].name, p.figures[f].visualFilename)

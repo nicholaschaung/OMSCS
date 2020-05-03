@@ -13,6 +13,7 @@ from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageChops
 import numpy as np
+import timeit
 #from scipy.spatial.distance import cdist
 
 # Notes:
@@ -38,6 +39,7 @@ class Agent:
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
     def Solve(self, problem):
+        t0 = timeit.default_timer()
         
         # This loop writes the image data for each image to .txt files
 #        for f in problem.figures:
@@ -63,6 +65,8 @@ class Agent:
         
         else:
             answer = self.threeByThree(layout, problem)
+            t1 = timeit.default_timer()
+            print('CPU time elapsed to calculate: %s' % str(t1-t0))
             return answer        
         #return -1
 
