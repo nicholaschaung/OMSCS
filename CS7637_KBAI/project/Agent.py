@@ -42,11 +42,11 @@ class Agent:
         t0 = timeit.default_timer()
         
         # This loop writes the image data for each image to .txt files
-#        for f in problem.figures:
-#            image = Image.open(problem.figures[f].visualFilename)
-#            image = image.convert('L')
-#            filename = problem.figures[f].name + '.txt'
-#            self.writeData(image, filename)
+        """ for f in problem.figures:
+            image = Image.open(problem.figures[f].visualFilename)
+            image = image.convert('L')
+            filename = problem.figures[f].name + '_bw.txt'
+            self.writeData(image, filename) """
         
         # The index is used to look-up the structure for a problemType.
         # For the values, the first tuple contains the 'question' images and 
@@ -274,39 +274,6 @@ class Agent:
             answerAddGHI, diffAddGHI = self.findAnswerHist(problem, answers, addGHI, 1.0, 0.03)
             if answerAddGHI:
                 return int(answerAddGHI)
-#        else:
-#            # tolerance = 0.06 based on Basic Problem 
-#            # hfACB = , hfBF = 
-#            addACB = self.checkAddition(images, 'ACB', 0.06)
-#            if addACB:
-#                print('A + C = B relationship found.')
-#                
-#                addGHI = ImageChops.darker(images['G'], images['H'])
-#                #addGHI.show()
-#                # tolerance = 0.03 based on Basic Problem E-03
-#                # expected hf = 1.0, answer hf = 0.9748848891
-#                answerAddGHI, diffAddGHI = self.findAnswerHist(problem, answers, addGHI, 1.0, 0.03)
-#                if answerAddGHI:
-#                    return int(answerAddGHI)
-        #
-        # ADD C + B = A FOR POTENTIAL TEST SET IMPROVEMENT!!!!!!
-        #
-        
-        # Perform check to determine if there is row-element subtraction.
-        print('Attempting to solve by row-element subtraction...')
-        # tolerance = 0.05 based on Basic Problem E-05
-        # D - E = F histogram factor: 1.047660312
-        subABC = self.checkSubtraction(images, 'ABC', 0.05)
-        if subABC:
-            print('A - B = C relationship found.')
-            subGHI = ImageChops.difference(images['G'], images['H'])
-            subGHI = ImageChops.invert(subGHI)
-            #subGHI.show()
-            # tolerance = 0.03 based on Basic Problem 
-            # expected hf = 1.0, answer hf = 
-            answerSubGHI, diffSubGHI = self.findAnswerHist(problem, answers, subGHI, 1.0, 0.03)
-            if answerSubGHI:
-                return int(answerSubGHI)
         
         # Perform check to determine if there is row-element XOR operation.
         print('Attempting to solve by row-element XOR...')
@@ -434,7 +401,7 @@ class Agent:
         h1 = np.array(image1.histogram())
         h2 = np.array(image2.histogram())
         
-        # factor is a measure of how many more "filled in" pixels, 
+        # Factor is a measure of how many more "filled in" pixels, 
         # pixel value = 0, image2 has compared to image1. If image2 has more 
         # black pixels, pixel value = 0, factor > 1.0.
         # (image1 black pixels) * factor =  image2 black pixels
@@ -464,8 +431,6 @@ class Agent:
         #image1.show()
         image2 = image2.filter(ImageFilter.GaussianBlur(radius=1))
         #image2.show()
-        #image1 = image1.filter(ImageFilter.BoxBlur(radius=1))
-        #image2 = image2.filter(ImageFilter.BoxBlur(radius=1))
         
         pixels1 = np.array(image1)
         pixels2 = np.array(image2)
@@ -739,8 +704,6 @@ class Agent:
         #imageAB.show()
         imageBC = ImageChops.lighter(images['B'], images['C'])
         #imageBC.show()
-        #hfABBC = self.histFactor(imageAB, imageBC)
-        #print('AB-BC histogram factor:', hfABBC)
         
         pdABBC = self.pixelDifference(imageAB, imageBC)
         print('AB-BC pixel difference:', pdABBC)
@@ -752,8 +715,7 @@ class Agent:
         pixelsAB = np.array(imageAB)
         pixelsBC = np.array(imageBC)
         
-        # Try different shifted images of A, B, and C to check if a shifted 
-        # image would pass the check.
+        # Try blurring or shifting images and re-calculating the difference.
         if pdABBC > tolerance:
             imageAblur = images['A'].filter(ImageFilter.GaussianBlur(radius=1))
             imageBblur = images['B'].filter(ImageFilter.GaussianBlur(radius=1))
@@ -762,8 +724,6 @@ class Agent:
             #imageABblur.show()
             imageBCblur = ImageChops.lighter(imageBblur, imageCblur)
             #imageBCblur.show()
-            #hfABBCblur = self.histFactor(imageABblur, imageBCblur)
-            #print('AB-BC blurred histogram factor:', hfABBCblur)
             
             pdABBCblur = self.pixelDifference(imageABblur, imageBCblur)
             print('AB-BC blurred pixel difference:', pdABBCblur)
@@ -778,10 +738,6 @@ class Agent:
         elif pdABBC < tolerance and pixelsAB.mean() < 250 and pixelsBC.mean() < 250:
             row = True
         
-        # Second and third elements are False by default indicating original 
-        # images were not shifted. If a shifted image resulted in a passed 
-        # check, it will be returned above.
-        #return row, finalA, finalB, finalC
         return row
 
     def checkColSim(self, images, tolerance):
@@ -793,8 +749,6 @@ class Agent:
         #imageAD.show()
         imageDG = ImageChops.lighter(images['D'], images['G'])
         #imageDG.show()
-        #hfADDG = self.histFactor(imageAD, imageDG)
-        #print('AD-DG histogram factor:', hfADDG)
         
         pdADDG = self.pixelDifference(imageAD, imageDG)
         print('AD-DG pixel difference:', pdADDG)
@@ -808,8 +762,7 @@ class Agent:
         #print('Mean value of common A-D image:', pixelsAD.mean())
         #print('Mean value of common D-G image:', pixelsDG.mean())
         
-        # Try different shifted images of A, B, and C to check if a shifted 
-        # image would pass the check.
+        # Try blurring or shifting images and re-calculating the difference.
         if pdADDG > tolerance:
             imageAblur = images['A'].filter(ImageFilter.GaussianBlur(radius=1))
             imageDblur = images['D'].filter(ImageFilter.GaussianBlur(radius=1))
@@ -818,8 +771,6 @@ class Agent:
             #imageADblur.show()
             imageDGblur = ImageChops.lighter(imageDblur, imageGblur)
             #imageDGblur.show()
-            #hfADDGblur = self.histFactor(imageADblur, imageDGblur)
-            #print('AD-DG blurred histogram factor:', hfADDGblur)
             
             pdADDGblur = self.pixelDifference(imageADblur, imageDGblur)
             print('AD-DG blurred pixel difference:', pdADDGblur)
@@ -921,12 +872,12 @@ class Agent:
         If a shifted image is within tolerance, return the shifted image and 
         the other image.
         '''
-#        xshifts = (-2, 2)
-#        yshifts = (-2, 2)
-#        for xs in xshifts:
-#            Ax = ImageChops.offset(images['A'], xoffset=xs, yoffset=None)
-#            AxB = ImageChops.lighter(Ax, images['B'])
-#            self.histFactor(AxB, imageBC)        
+        xshifts = (-2, 2)
+        #yshifts = (-2, 2)
+        for xs in xshifts:
+            image1x = ImageChops.offset(image1, xoffset=xs, yoffset=None)
+            image1x2 = ImageChops.lighter(image1x, image2)
+            self.histFactor(image1x2, image2)        
     
     def checkAddition(self, images, addSequence, tolerance):
         '''Checks problem to determine if image addition relationship exists.
@@ -966,34 +917,6 @@ class Agent:
                     addition = True
         
         return addition
-    
-    def checkSubtraction(self, images, subSequence, tolerance):
-        '''Checks problem to determine if image subtraction relationship exists.
-        
-        subSequence specifies the addition sequence; e.g., 'ABC' implies 
-        A - B = C, 'ACB' implies A - C = B.
-        '''
-        subtraction = False
-        
-        if subSequence == 'ABC':
-            imageAB = ImageChops.difference(images['A'], images['B'])
-            imageAB = ImageChops.invert(imageAB)
-            #imageAB.show()
-            hfABC = self.histFactor(imageAB, images['C'])
-            print('A + B = C histogram factor:', hfABC)
-            # Normalize hf to difference from 1.0; "histogram factor difference"
-            hfdABC = np.abs(1.0 - hfABC)
-            if hfdABC < tolerance:
-                # Verify D + E = F
-                imageDE = ImageChops.difference(images['D'], images['E'])
-                imageDE = ImageChops.invert(imageDE)
-                hfDEF = self.histFactor(imageDE, images['F'])
-                print('D - E = F histogram factor:', hfDEF)
-                hfdDEF = np.abs(1.0 - hfDEF)
-                if hfdDEF < tolerance:
-                    subtraction = True
-        
-        return subtraction
     
     def checkXOR(self, images, xorSequence, tolerance):
         '''Checks problem to determine if image XOR relationship exists.
