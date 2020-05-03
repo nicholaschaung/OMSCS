@@ -85,9 +85,6 @@ class Agent:
         imageC = Image.open(problem.figures[question[2]].visualFilename)
         imageC = imageC.convert('L')
         
-        #xform = (1, 0, 0, 0, 1, 0)
-        #imageAx = self.applyXformAffine(imageA, xform)
-        
         # Test all the 'basic' transformations and return the transformations
         # that map A-B and A-C within the specified tolerance.
         #
@@ -1022,8 +1019,3 @@ class Agent:
                 XOR = True
         
         return XOR
-
-    def applyXformAffine(self, image, xform):
-        imageX = image.transform(image.size, Image.AFFINE, data=xform, resample=0)
-        return imageX
-    
