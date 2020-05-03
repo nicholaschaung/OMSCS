@@ -35,50 +35,20 @@ def solve():
         sets.append(ProblemSet(line))                       # We will use a fresh copy of all problem sets when grading.
         line=getNextLine(r)                                 # We will also use some problem sets not given in advance.
 
-    #print(sets)
-    #print()
-    for s in sets:
-        if s.name == "Basic Problems D":
-            #print(s.name)
-            #print(s.problems)
-            #print()
-            for p in s.problems:
-                if p.name == "Basic Problem D-06":
-                    print(p.name, p.problemType, p.problemSetName, p.hasVisual, p.hasVerbal)
-                    #print(p.figures)
-                    for f in p.figures:
-                        if f == "A":
-                            print(f, p.figures[f].name, p.figures[f].visualFilename)
-                            print(p.figures[f].objects)
-                            print()
-                            for o in p.figures[f].objects:
-                                print(p.figures[f].objects[o].name, p.figures[f].objects[o].attributes)
-                            print()
-
     # Initializing problem-solving agent from Agent.java
     agent=Agent()   # Your agent will be initialized with its default constructor.
                     # You may modify the default constructor in Agent.java
 
-    # Running agent against each problem set
+    # Running agent against selected problem
     for set in sets:
-        if set.name == "Basic Problems D":
+        if set.name == "Basic Problems E":
             for problem in set.problems:   # Your agent will solve one problem at a time.
-                if problem.name == "Basic Problem D-06":
+                if problem.name == "Basic Problem E-11":
+                    print('\n', problem.name, problem.problemType, problem.problemSetName, \
+                        problem.hasVisual, problem.hasVerbal)
                     answer = agent.Solve(problem)
                     print('Final answer:', str(answer))
     
-    
-    #with open("AgentAnswers.csv","w") as results:     # Results will be written to ProblemResults.csv.
-                                                        # Note that each run of the program will overwrite the previous results.
-                                                        # Do not write anything else to ProblemResults.txt during execution of the program.
-        #results.write("ProblemSet,RavensProblem,Agent's Answer\n")
-        #for set in sets:
-            #for problem in set.problems:   # Your agent will solve one problem at a time.
-                #try:
-                #answer = agent.Solve(problem)  # The problem will be passed to your agent as a RavensProblem object as a parameter to the Solve method
-                                                # Your agent should return its answer at the conclusion of the execution of Solve.
-
-                #results.write("%s,%s,%d\n" % (set.name, problem.name, answer))
     r.close()
 
 # The main execution will have your agent generate answers for all the problems,
