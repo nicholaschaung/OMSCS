@@ -41,9 +41,9 @@ def solve():
 
     # Running agent against selected problem
     for set in sets:
-        if set.name == "Challenge Problems E":
+        if set.name == "Basic Problems D":
             for problem in set.problems:   # Your agent will solve one problem at a time.
-                if problem.name == "Challenge Problem E-01":
+                if problem.name == "Basic Problem D-04":
                     print('\n', problem.name, problem.problemType, problem.problemSetName, \
                         problem.hasVisual, problem.hasVerbal)
                     answer = agent.Solve(problem)

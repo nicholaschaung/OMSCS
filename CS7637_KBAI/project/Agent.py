@@ -437,6 +437,8 @@ class Agent:
         
         #print('Calculating pixel difference...')
         diff = np.subtract(pixels1, pixels2)
+        #image12 = Image.fromarray(diff)
+        #image12.show()
         # Current structure of diff is an instance of <class 'numpy.ndarray'>.
         # This structure has shown to limit the square calculation to values 
         # less than 255. Therefore, convert the 2-dimensional ndarray to a 
@@ -617,7 +619,6 @@ class Agent:
                 matches.append(af)
                 diffs.append(diff)
         
-        # Only one answer found
         if len(matches) == 0:
             return False, False
         else:
@@ -696,9 +697,6 @@ class Agent:
         '''Checks problem to determine if row similarity exists.
         '''
         row = False
-        #finalA = False
-        #finalB = False
-        #finalC = False
         
         imageAB = ImageChops.lighter(images['A'], images['B'])
         #imageAB.show()
