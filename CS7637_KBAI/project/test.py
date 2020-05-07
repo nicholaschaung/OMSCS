@@ -43,7 +43,7 @@ def solve():
     for set in sets:
         if set.name == "Basic Problems D":
             for problem in set.problems:   # Your agent will solve one problem at a time.
-                if problem.name == "Basic Problem D-04":
+                if problem.name == "Basic Problem D-06":
                     print('\n', problem.name, problem.problemType, problem.problemSetName, \
                         problem.hasVisual, problem.hasVerbal)
                     answer = agent.Solve(problem)

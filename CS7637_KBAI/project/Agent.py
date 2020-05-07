@@ -59,9 +59,8 @@ class Agent:
                 }
         
         if problem.problemType == '2x2':
-            #answer = self.twoByTwo(layout, problem)
-            #return answer
-            return -1
+            answer = self.twoByTwo(layout, problem)
+            return answer
         
         else:
             answer = self.threeByThree(layout, problem)
@@ -73,150 +72,14 @@ class Agent:
     def twoByTwo(self, layout, problem):
         '''Solves 2x2 problems
         '''
-        question = layout[problem.problemType][0]
-        answers = layout[problem.problemType][1]
-        
-        # Extra pixel information in original RGBA format not necessary 
-        # and converting to BW 8-pixel reduces operations
-        imageA = Image.open(problem.figures[question[0]].visualFilename)
-        imageA = imageA.convert('L')
-        imageB = Image.open(problem.figures[question[1]].visualFilename)
-        imageB = imageB.convert('L')
-        imageC = Image.open(problem.figures[question[2]].visualFilename)
-        imageC = imageC.convert('L')
-        
-        # Test all the 'basic' transformations and return the transformations
-        # that map A-B and A-C within the specified tolerance.
-        #
-        # For Problem 6, within self.compareXformsBasic(imageA, imageC):
-        # [0.0027637734, 0.022322945, 0.0279591782, 0.0281285537, 0.0481293936, 0.0656495987]
-        # ['FLIP_TOP_BOTTOM', 'ROTATE_90', 'ROTATE_270', 'FLIP_LEFT_RIGHT', 'ROTATE_180', 'TRANSPOSE']
-        # For Problem 11, within self.compareXformsBasic(imageA, imageB):
-        # [0.0254438144, 0.0971996978, 0.0975686778, 0.0975686778, 0.1165908785, 0.1165982627]
-        # ['FLIP_LEFT_RIGHT', 'TRANSPOSE', 'ROTATE_90', 'ROTATE_270', 'FLIP_TOP_BOTTOM', 'ROTATE_180']
-        # Therefore, the tolerance would have to be set > 0.0279591782 
-        # to return the correct answer for Problem 6, 'ROTATE_270', but 
-        # would have to be set < 0.0254438144 to eliminate the 
-        # incorrect answer for Problem 11, 'FLIP_LEFT_RIGHT'.
-        # tolerance1 = 0.14 based on Basic Problem B-06
-        # tolerance2 = 0.11 based on Basic Problem B-08
-        xformsBasicAB, xformsBasicABnames = self.compareXformsBasic(imageA, imageB, 0.14, 0.11)
-        print('Indicative transformation(s) for A-B is/are:', xformsBasicABnames)
-        xformsBasicAC, xformsBasicACnames = self.compareXformsBasic(imageA, imageC, 0.14, 0.11)
-        print('Indicative transformation(s) for A-C is/are:', xformsBasicACnames)
-        
-        # If they exist, apply the indicative transformations on C and B.
-        # Then check if the resulting image is one of the answers.
-        # If the result is not one of the answers, iterate through the list
-        # of valid basic transformations.
-        if xformsBasicAB:
-            count = 0
-            answerFromAB = False
-            while count < len(xformsBasicAB) and (not answerFromAB):
-                imageDfromAB = self.applyXformBasic(imageC, xformsBasicABnames[count])
-                answerFromAB = self.findAnswer(problem, imageDfromAB, answers, 0.09)
-                print('Answer from A-B transformation:', answerFromAB)
-                count += 1
-        #else:
-            #print('No basic indicative transformation found for A-B.')
-        
-        if xformsBasicAC:
-            count = 0
-            answerFromAC = False
-            while count < len(xformsBasicAC) and not answerFromAC:
-                imageDfromAC = self.applyXformBasic(imageB, xformsBasicACnames[count])
-                answerFromAC = self.findAnswer(problem, imageDfromAC, answers, 0.09)
-                print('Answer from A-C transformation:', answerFromAC)
-                count += 1
-        #else:
-            #print('No basic indicative transformation found for A-C.')
-        
-        # Both transformations were identified
-        #
-        # solvedByBasic tracks whether or not the basic methods have solved
-        # the problem. If they haven't, the sequence continues to solving
-        # by pixel.
-        solvedByBasic = False
-        if xformsBasicAB and xformsBasicAC:
-            # If both AB and BC transformations were identified, 
-            # but no answer was found from them.
-            if not answerFromAB and not answerFromAC:
-                print('Basic transformations found, but no answer.')
-            # If both transformations resulted in the same answer, 
-            # that answer is the unambiguous solution.
-            elif answerFromAB == answerFromAC:
-                #print('equals')
-                solvedByBasic = True
-                return int(answerFromAB)
-            # If both transformations were identified, but one did not 
-            # result in an answer, choose the one that did find an answer.
-            elif answerFromAB and not answerFromAC:
-                solvedByBasic = True
-                return int(answerFromAB)
-            elif answerFromAC and not answerFromAB:
-                solvedByBasic = True
-                return int(answerFromAC)
-            # If both transformations found answers but they differed, 
-            # choose the A-B transformation (arbitrary heirarchy based 
-            # upon what I perceive to be the more apparent relationship).
-            elif answerFromAB != answerFromAC:
-                solvedByBasic = True
-                return int(answerFromAB)
-            # Neither transformation resulted in an available answer
-            #else:
-                #print('No matching answer image found. No final answer from the basic solver.')
-        # Only the A-B transformation was identified
-        elif xformsBasicAB:
-            if answerFromAB:
-                #print('Only A-B transformation exists and it produces an answer.')
-                solvedByBasic = True
-                return int(answerFromAB)
-            #else:
-                #print('No valid transformation. No final answer from the basic solver.')
-        # Only the A-C transformation was identified
-        elif xformsBasicAC:
-            if answerFromAC:
-                #print('Only A-C transformation exists and it produces an answer.')
-                solvedByBasic = True
-                return int(answerFromAC)
-            #else:
-                #print('No valid transformation. No final answer from the basic solver.')
-        else:
-            print('No valid transformation. No final answer from the basic solver.')
-        
-        # If the previous basic transformation solve methods did not work,
-        # attempt pixel-wise transformation comparison
-        #
-        # solvedByPixel tracks whether or not the pixel difference solved it.
-        solvedByPixel = False
-        if solvedByBasic == False:
-            print('Attempting to solve by pixel difference..')
-            xformPixelAB = self.generateXformPixel(imageA, imageB)
-            xformPixelAC = self.generateXformPixel(imageA, imageC)
-            
-            #with open('difference.txt', 'w') as imageData:
-                #for x in xformPixelAB:
-                    #imageData.write(str(x) + '\n')
-            
-            imageDfromABpixel = self.applyXformPixel(imageC, xformPixelAB)
-            imageDfromACpixel = self.applyXformPixel(imageB, xformPixelAC)
-            
-            # tolerance = 0.20 based on Basic Problem B-12
-            answerFromABpixel = self.findAnswer(problem, imageDfromABpixel, answers, 0.20)
-            #print(answerFromABpixel)
-            answerFromACpixel = self.findAnswer(problem, imageDfromACpixel, answers, 0.20)
-            #print(answerFromACpixel)
-            
-            # If both answers equal each other and are valid
-            if answerFromABpixel and (answerFromABpixel == answerFromACpixel):
-                solvedByPixel = True
-                return int(answerFromABpixel)
-            #else:
-                #print('Pixel difference method did not find answer.')
-        
-        if solvedByBasic == False and solvedByPixel == False:
-            #print('Neither method found an answer.')
-            return -1
+
+        # Initial (rudimentary) problem solving methods developed 
+        # for 2x2 methods removed.
+        # If this agent is to be used to re-visit 2x2 methods, the 
+        # original 2x2 methods should be re-worked with the framework 
+        # of the 3x3 methods.
+
+        return -1
     
     def threeByThree(self, layout, problem):
         '''Solves 3x3 problems
@@ -400,6 +263,8 @@ class Agent:
         
         h1 = np.array(image1.histogram())
         h2 = np.array(image2.histogram())
+        #with open('histdata.txt', 'w') as histData:
+            #histData.write(str(h1))
         
         # Factor is a measure of how many more "filled in" pixels, 
         # pixel value = 0, image2 has compared to image1. If image2 has more 
@@ -455,114 +320,6 @@ class Agent:
         
         #print('Returning pixel difference...')
         return euclidNorm
-    
-    def compareXformsBasic(self, image1, image2, tolerance1, tolerance2):
-        '''Applies all of the 'basic' transformations to image1 and 
-        compares the results to image2. 
-        
-        Returns all of the transformations that result in image2.
-        '''
-        
-        # Paired lists, where the index of the name in xformNames will 
-        # correspond with the index of the value in xformValues
-        xformValues = list()
-        xformNames = list()
-        
-        # Flips image about the vertical central axis, "left to right";
-        # transformation ID = 01 for FLIP_LEFT_RIGHT
-        image1x01 = image1.transpose(method=Image.FLIP_LEFT_RIGHT)
-        diff1x01 = self.pixelDifference(image1x01, image2)
-        xformValues.append(diff1x01)
-        xformNames.append('FLIP_LEFT_RIGHT')
-        
-        # Flips image about the horizontal axis
-        # transformation ID = 02 for FLIP_TOP_BOTTOM
-        image1x02 = image1.transpose(method=Image.FLIP_TOP_BOTTOM)
-        diff1x02 = self.pixelDifference(image1x02, image2)
-        xformValues.append(diff1x02)
-        xformNames.append('FLIP_TOP_BOTTOM')
-        
-        # Rotates images counterclockwise 90 degrees
-        # transformation ID = 03 for ROTATE_90
-        image1x03 = image1.transpose(method=Image.ROTATE_90)
-        diff1x03 = self.pixelDifference(image1x03, image2)
-        xformValues.append(diff1x03)
-        xformNames.append('ROTATE_90')
-        
-        # Rotates images counterclockwise 180 degrees
-        # transformation ID = 04 for ROTATE_180
-        image1x04 = image1.transpose(method=Image.ROTATE_180)
-        diff1x04 = self.pixelDifference(image1x04, image2)        
-        xformValues.append(diff1x04)
-        xformNames.append('ROTATE_180')
-        
-        # Rotates images counterclockwise 270 degrees
-        # transformation ID = 05 for ROTATE_270
-        image1x05 = image1.transpose(method=Image.ROTATE_270)
-        diff1x05 = self.pixelDifference(image1x05, image2)
-        xformValues.append(diff1x05)
-        xformNames.append('ROTATE_270')
-        
-        # Reflects image about the y = -x 'transpose' axis
-        # transformation ID = 06 for TRANSVERSE
-        image1x06 = image1.transpose(method=Image.TRANSPOSE)
-        diff1x06 = self.pixelDifference(image1x06, image2)
-        xformValues.append(diff1x06)
-        xformNames.append('TRANSPOSE')
-        
-        # Zips xformValues and xformNames together in order to order the 
-        # results by difference; least to greatest
-        valuesNames = zip(xformValues, xformNames)
-        valuesNames = sorted(valuesNames, key=lambda x: x[0])
-        xformValues = [v for v, n in valuesNames]
-        xformNames = [n for v, n in valuesNames]
-        
-        # If only one value in xformValues is below the tolerance, lower the 
-        # tolerance to the smaller threshold
-        # The default is the tolerance1 value.
-        tolerance = tolerance1
-        count = 0
-        for v in xformValues:
-            if v <= tolerance1:
-                count += 1
-        if count == 1:
-            tolerance = tolerance2
-        
-        # Pulls only the values from xformValues and xformNames < tolerance
-        count = 0
-        finalValues = list()
-        finalNames = list()
-        for v in xformValues:
-            if v <= tolerance:
-                finalValues.append(v)
-                finalNames.append(xformNames[count])
-            count += 1
-        
-        return finalValues, finalNames
-    
-    def applyXformBasic(self, image, xform):
-        '''Applies the specified basic transformation on the image and returns
-        the resulting image.
-        '''
-        
-        # If I could dynamically assign the parameter, method=Image.xxx, 
-        # to the .transpose method, this method would not be necessary.
-        if xform == 'FLIP_LEFT_RIGHT':
-            result = image.transpose(method=Image.FLIP_LEFT_RIGHT)
-        elif xform == 'FLIP_TOP_BOTTOM':
-            result = image.transpose(method=Image.FLIP_TOP_BOTTOM)
-        elif xform == 'ROTATE_90':
-            result = image.transpose(method=Image.ROTATE_90)
-        elif xform == 'ROTATE_180':
-            result = image.transpose(method=Image.ROTATE_180)
-        elif xform == 'ROTATE_270':
-            result = image.transpose(method=Image.ROTATE_270)
-        elif xform == 'TRANSPOSE':
-            result = image.transpose(method=Image.TRANSPOSE)
-        elif xform == 'TRANSVERSE':
-            result = image.transpose(method=Image.TRANSVERSE)
-        
-        return result
     
     def findAnswer(self, problem, image, answers, tolerance):
         '''Compares the candidate answer to the images in the set of answers.
@@ -632,32 +389,6 @@ class Agent:
             # Return the first answer in matches and its difference value; 
             # i.e., the answer with the lowest difference
             return matches[0], diffs[0]
-    
-    def generateXformPixel(self, image1, image2):
-        '''Generates an additive transformation that will transform image1 to 
-        image 2 pixel-by-pixel.
-        
-        Returns an array equal in length to image1 and image2. Adding this 
-        array element-by-element to np.array(image1) results in np.array(image2).
-        '''        
-        pixels1 = np.array(image1)
-        pixels2 = np.array(image2)
-        xform = np.subtract(pixels2, pixels1)
-        
-        return xform
-    
-    def applyXformPixel(self, image, xform):
-        '''Applies the specified transformation to the image and returns the 
-        transformed image.
-        
-        The parameter xform should be an array of equal length to np.array(image).
-        '''
-        #xformDisplay = Image.fromarray(xform)
-        #xformDisplay.show()
-        pixels = np.array(image)
-        result = pixels + xform
-        result = Image.fromarray(result)
-        return result
     
     def checkDiagonal(self, images, diagType, tolerance):
         '''Checks problem to determine if diagonal similarity exists.
