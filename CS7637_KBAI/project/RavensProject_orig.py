@@ -11,7 +11,6 @@
 import os
 import sys
 import csv
-import timeit
 
 from Agent import Agent
 from ProblemSet import ProblemSet
@@ -45,7 +44,6 @@ def solve():
                                                         # Note that each run of the program will overwrite the previous results.
                                                         # Do not write anything else to ProblemResults.txt during execution of the program.
         results.write("ProblemSet,RavensProblem,Agent's Answer\n")
-        t0 = timeit.default_timer()
         for set in sets:
             for problem in set.problems:   # Your agent will solve one problem at a time.
                 #try:
@@ -53,8 +51,6 @@ def solve():
                                                 # Your agent should return its answer at the conclusion of the execution of Solve.
 
                 results.write("%s,%s,%d\n" % (set.name, problem.name, answer))
-        t1 = timeit.default_timer()
-        print('CPU time elapsed to calculate all problem sets: %s' % str(t1-t0))
     r.close()
 
 # The main execution will have your agent generate answers for all the problems,
